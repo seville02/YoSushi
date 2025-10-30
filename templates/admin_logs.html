@@ -1,0 +1,502 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin | Full Workforce Analytics{% endblock %}
+
+{% block head_extra %}
+
+    <style>
+    /* --- Imports & Variables (Restored Original Dark Theme) --- */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+    :root {
+        --primary-color: #00ADB5;
+        --card-bg: #393E46;
+        --dark-bg: #222831;
+        --text-color: #EEEEEE;
+        --text-muted: #A0A0A0;
+        --error-color: #FF6B6B;
+        --success-color: #4CAF50;
+        --location-out-color: #E84A5F;
+        --location-in-color: #79d279;
+    }
+
+    /* --- Base & Layout --- */
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: var(--dark-bg);
+        color: var(--text-color);
+    }
+    h1 {
+        color: var(--primary-color);
+        margin-bottom: 25px;
+    }
+    .container {
+        width: 95%;
+        margin: 0 auto;
+    }
+
+    /* --- Table Styling --- */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: var(--card-bg);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        margin-bottom: 20px;
+    }
+
+    /* Set MINIMUM width on the table itself to prevent header wrapping */
+    .logs-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .logs-container table {
+        min-width: 1250px;
+        table-layout: fixed; /* CRUCIAL: Ensures column widths are respected */
+    }
+
+    /* Header Cells */
+    th, td {
+        padding: 10px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        vertical-align: top;
+        white-space: normal;
+    }
+    th {
+        background-color: var(--primary-color);
+        color: var(--dark-bg);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        font-size: 0.9em;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .sub-header th {
+        background-color: #31363F;
+        color: var(--text-color);
+        font-weight: 400;
+    }
+    tr:nth-child(even) {
+        background-color: #31363F;
+    }
+    tr:hover {
+        background-color: #4A515A;
+    }
+
+    /* --- Column Widths --- */
+    .col-emp-id { width: 40px; }
+    .col-name { width: 120px; }
+    .col-date { width: 100px; }
+    .col-in-time { width: 80px; }
+    .col-out-time { width: 80px; }
+    .col-break-start-end { width: 140px; }
+    .col-break-total { width: 90px; }
+    .col-shift-duration { width: 70px; }
+    .col-location {
+        width: 150px;
+        word-break: break-word;
+    }
+    .col-work-status {
+        width: 150px;
+        word-break: break-word;
+    }
+    .col-actions { width: 70px; }
+
+
+    /* --- Status & Messages --- */
+    .status-error-red {
+        color: var(--error-color);
+        font-weight: bold;
+        white-space: normal;
+        display: inline-block;
+        padding: 2px 5px;
+        border: 1px solid var(--error-color);
+        border-radius: 4px;
+    }
+    /* ORIGINAL STATUS-OK (GREEN) */
+    .status-ok {
+        color: var(--success-color);
+        font-weight: bold;
+    }
+    /* NEW STATUS-COMPLETED (GREEN) */
+    .status-completed {
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    /* Location Status Styles */
+    .status-location-ok {
+        color: var(--location-in-color);
+        font-weight: 600;
+        padding: 2px 5px;
+        border: 1px solid var(--location-in-color);
+        border-radius: 4px;
+        display: inline-block;
+        white-space: normal;
+    }
+    .status-location-error {
+        color: var(--location-out-color);
+        font-weight: 600;
+        padding: 2px 5px;
+        border: 1px solid var(--location-out-color);
+        border-radius: 4px;
+        display: inline-block;
+        white-space: normal;
+    }
+
+    /* --- Pagination CSS --- */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+    .pagination {
+        display: flex;
+        padding-left: 0;
+        list-style: none;
+        border-radius: .25rem;
+    }
+    .page-item {
+        margin: 0 2px;
+    }
+    .page-link {
+        padding: 8px 12px;
+        line-height: 1.25;
+        color: var(--primary-color);
+        background-color: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-decoration: none;
+        border-radius: 4px;
+        display: block;
+    }
+    .page-link:hover {
+        color: var(--text-color);
+        background-color: #4A515A;
+    }
+    .page-item.active .page-link {
+        color: var(--dark-bg);
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    .page-item.disabled .page-link {
+        color: var(--text-muted);
+        pointer-events: none;
+        background-color: #31363F;
+    }
+    .pagination-info {
+        color: var(--text-muted);
+        font-size: 0.9em;
+    }
+
+    .back-btn {
+        display: inline-block; margin-right: 20px; padding: 8px 15px;
+        background-color: var(--primary-color); color: var(--dark-bg);
+        text-decoration: none; border-radius: 5px; font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .back-btn:hover {
+        background-color: #008C91;
+        color: white;
+    }
+/* --- Button & Link Styles --- */
+    .header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px; /* Space between the buttons if they wrap */
+
+    }
+    .action-link {
+    display: inline-block;
+    padding: 8px 15px; /* Your desired padding */
+    background-color: #FFD166;
+    color: var(--dark-bg);
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    }
+    .action-link:hover {
+        background-color: #E6B800;
+    }
+
+    .icon {
+        cursor: pointer; margin: 0 5px; text-decoration: none;
+        color: var(--primary-color);
+    }
+    .icon:hover {
+         color: var(--text-color);
+    }
+
+    /* --- Break List Specific Styles --- */
+    .break-list {
+        list-style-type: none; padding: 0; margin: 0;
+        font-size: 0.8em;
+        text-align: left;
+    }
+    .break-list li {
+        margin-bottom: 3px; padding-bottom: 3px;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+    .break-list li:last-child {
+        border-bottom: none; margin-bottom: 0; padding-bottom: 0;
+    }
+    .total-break {
+        margin-top: 5px; display: block; font-weight: bold;
+        color: #FFD166;
+    }
+
+    /* --- Floating Flash Message Styles (NEW) --- */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .toast-message {
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        transform: translateX(100%);
+        min-width: 300px;
+    }
+    .toast-message.success {
+        background-color: #4CAF50;
+        color: white;
+        border-left: 5px solid #388E3C;
+    }
+    .toast-message.error {
+        background-color: #FF6B6B;
+        color: white;
+        border-left: 5px solid #D32F2F;
+    }
+    .toast-message.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    </style>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+<div class="container logs-container">
+
+
+<div class="header-controls">
+    <a href="{{ url_for('admin_panel') }}" class="back-btn">⬅ Back to Admin Panel</a>
+
+    {% if filter_type == 'today' %}
+        <a href="{{ url_for('admin_history') }}" class="action-link">
+            <i class="fas fa-calendar-alt"></i> View Full History
+        </a>
+    {% else %}
+        <a href="{{ url_for('admin_logs') }}" class="action-link">
+            <i class="fas fa-clock"></i> View Today's Logs Only
+        </a>
+
+        <form method="POST" action="{{ url_for('admin_delete_all_logs') }}" onsubmit="return confirm('⚠️ CRITICAL WARNING: This will permanently delete ALL attendance and break logs. Are you absolutely sure?');" style="display: inline-block; margin: 0; padding: 0;">
+            <button type="submit" class="action-link" style="background-color: var(--error-color); color: white; margin: 0; padding: 8px 15px;">
+                <i class="fas fa-trash-alt"></i> Delete All History
+            </button>
+            <input type="hidden" name="confirm_delete" value="DELETE_ALL_LOGS">
+        </form>
+
+    {% endif %}
+</div>
+
+<h1>{{ page_title }}</h1>
+
+
+{% if logs %}
+<table>
+    <thead>
+        <tr>
+            <th rowspan="2" class="col-emp-id">ID</th>
+            <th rowspan="2" class="col-name">Name</th>
+            <th rowspan="2" class="col-date">Date</th>
+            <th colspan="2" class="col-in-out">Clock In / Out</th>
+
+            <th colspan="3">Breaks & Duration</th>
+
+            <th rowspan="2" class="col-location">Location Status</th>
+            <th rowspan="2" class="col-status">Work Status</th>
+            <th rowspan="2" class="col-actions">Actions</th>
+        </tr>
+        <tr class="sub-header">
+            <th>Clock In</th>
+            <th>Clock Out</th>
+
+            <th>Start / End Time</th>
+            <th>Total Break (min)</th>
+            <th>Shift Duration</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td class="col-emp-id">{{ log.emp_id }}</td>
+            <td class="col-name">{{ log.name }}</td>
+            <td class="col-date">{{ log.date }}</td>
+
+            <td>{{ log.clock_in }}</td>
+            <td>{{ log.clock_out if log.clock_out else 'N/A' }}</td>
+
+            <td class="col-break-start-end">
+                {% if log.breaks %}
+                    <ul class="break-list">
+                        {% for break_data in log.breaks %}
+                            <li>
+                                Start: <strong>{{ break_data.break_start }}</strong> <br>
+                                End: <strong>{{ break_data.break_end if break_data.break_end else 'ACTIVE ⏳' }}</strong>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    No Breaks
+                {% endif %}
+            </td>
+
+            <td class="col-break-total">
+                {% set total_break = log.total_break_minutes | round(0) %}
+                {% if total_break > 0 %}
+                    <span class="total-break">{{ total_break }} min</span>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+
+            <td class="col-shift-duration">
+                {{ log.shift_duration }}
+            </td>
+
+            <td class="col-location">
+                {% if 'Outside Zone' in log.location_status_text or 'N/A' in log.location_status_text or 'Data Error' in log.location_status_text %}
+                    <span class="status-location-error" title="Lat: {{ log.latitude }}, Lon: {{ log.longitude }}">
+                        {{ log.location_status_text }}
+                    </span>
+                {% elif 'In Zone' in log.location_status_text %}
+                    <span class="status-location-ok" title="Lat: {{ log.latitude }}, Lon: {{ log.longitude }}">
+                        {{ log.location_status_text }}
+                    </span>
+                {% else %}
+                    {{ log.location_status_text }}
+                {% endif %}
+            </td>
+
+            <td class="col-status">
+                <span class="
+                    {% if 'Warning' in log.work_status or 'Error' in log.work_status or 'Review' in log.work_status or 'Incomplete' in log.work_status %}status-error-red
+                    {% elif 'OK' in log.work_status or 'COMPLETED' in log.work_status %}status-ok
+                    {% endif %}
+                ">
+                    {{ log.work_status or 'N/A' }}
+                </span>
+            </td>
+
+            <td class="col-actions">
+                <a href="{{ url_for('edit_log', log_id=log.id) }}" class="icon" title="Edit Log">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('delete_log', log_id=log.id) }}" class="icon" title="Delete Log" onclick="return confirm('WARNING: Are you sure you want to delete Log ID {{ log.id }}? Deleting a shift log will also delete ALL associated break records.');">
+                    <i class="fas fa-trash-alt"></i>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination-container">
+    {% if total_pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for(current_route, page=page - 1) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                {% for p in pages %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for(current_route, page=p) }}">{{ p }}</a>
+                    </li>
+                {% endfor %}
+
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for(current_route, page=page + 1) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <p class="pagination-info">Page {{ page }} of {{ total_pages }}</p>
+    {% endif %}
+</div>
+{% else %}
+<p>No logs to display.</p>
+{% endif %}
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch flashed messages from Flask context
+        const messages = {{ get_flashed_messages(with_categories=true) | tojson }};
+        const container = document.getElementById('flash-message-container');
+
+        messages.forEach(([category, message]) => {
+            // Map Flask categories to CSS classes
+            let cssCategory = 'success'; // Default for a positive flash
+            if (category.toLowerCase().includes('error') || category.toLowerCase().includes('delete')) {
+                cssCategory = 'error';
+            } else if (category.toLowerCase().includes('warning')) {
+                cssCategory = 'warning';
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${cssCategory}`;
+
+            // Add appropriate icon
+            const icon = (cssCategory === 'success') ? '<i class="fas fa-check-circle" style="margin-right: 8px;"></i>' :
+                         (cssCategory === 'error') ? '<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>' :
+                         '';
+
+            toast.innerHTML = icon + message;
+            container.appendChild(toast);
+
+            // 1. Show the toast (trigger CSS transition)
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // 2. Hide the toast after 4.5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // 3. Remove from DOM after transition finishes (0.5s)
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 4500);
+        });
+    });
+</script>
+
+</body>
+
+
+{% endblock %}

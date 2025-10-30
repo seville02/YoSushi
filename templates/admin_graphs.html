@@ -1,0 +1,251 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin | Full Workforce Analytics{% endblock %}
+
+{% block head_extra %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* --- ADMIN THEME COLORS --- */
+        :root {
+            --primary-color: #00ADB5;
+            --dark-bg: #222831;
+            --header-bg: #393E46;
+            --card-bg: #2D333A;
+            --text-color: #EEEEEE;       /* White/Light Gray for text */
+            --green-color: #4CAF50;      /* Explicit Green */
+            --white-color: #FFFFFF;      /* Explicit White */
+        }
+
+        .page-header {
+            color: var(--primary-color);
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 0 20px 40px;
+        }
+
+        .kpi-row-span {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--header-bg);
+        }
+
+        .chart-card h3 {
+            color: var(--text-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* KPI Card Styling */
+        .kpi-card {
+            text-align: center;
+            padding: 40px 20px;
+            justify-self: center;
+            width: 100%;
+        }
+        .kpi-card .kpi-value {
+            font-size: 4em;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+        .kpi-card .kpi-label {
+            font-size: 1.2em;
+            color: var(--text-color);
+            display: block;
+        }
+
+        .no-data-message {
+            color: var(--text-color);
+            text-align: center;
+            padding-top: 50px;
+            font-style: italic;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <h1 class="page-header">Full Workforce Analytics</h1>
+
+    <div class="dashboard-grid">
+
+        {# --- 1. Weekly Hours Trend Chart (Line Graph) --- #}
+        <div class="chart-card">
+            <h3>Weekly Hours Trend</h3>
+            <div class="chart-container">
+                <canvas id="hoursTrendChart"></canvas>
+            </div>
+        </div>
+
+        {# --- 2. Employee Type Breakdown (Doughnut Chart) --- #}
+        <div class="chart-card">
+            <h3>Employee Contract Breakdown</h3>
+            <div class="chart-container">
+                <canvas id="typeBreakdownChart"></canvas>
+            </div>
+        </div>
+
+        {# --- 3. Total Shifts Completed (Bar Chart) --- #}
+        <div class="chart-card">
+            <h3>Total Shifts Completed</h3>
+            <div class="chart-container">
+                <canvas id="shiftsCompletedChart"></canvas>
+            </div>
+        </div>
+
+        {# --- 4. Total Employee Count (KPI Card moved to bottom row) --- #}
+        <div class="kpi-row-span">
+            <div class="chart-card kpi-card">
+                <h3>Total Active Employees</h3>
+                <span class="kpi-value">{{ chart_data.totalEmployees }}</span>
+                <span class="kpi-label">Across All Departments</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const chartData = JSON.parse('{{ chart_data | tojson | safe }}');
+
+        // --- AXIS and LEGEND STYLING (Ensure visibility against dark background) ---
+        const chartDefaults = {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#393E46' }, // Header background color for grid lines
+                    ticks: { color: '#EEEEEE' } // White for tick numbers
+                },
+                x: {
+                    grid: { color: '#393E46' },
+                    ticks: { color: '#EEEEEE' } // White for labels
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#EEEEEE' } // White for legend text
+                },
+                title: { display: false }
+            }
+        };
+
+        // --- CHART 1: Weekly Hours Trend (Line Graph) ---
+        // REQUESTED COLOR: White (#FFFFFF)
+        const hoursCtx = document.getElementById('hoursTrendChart');
+        if (chartData.hoursTrend.data && chartData.hoursTrend.data.length > 0) {
+            new Chart(hoursCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.hoursTrend.labels,
+                    datasets: [{
+                        label: 'Total Hours Worked',
+                        data: chartData.hoursTrend.data,
+                        borderColor: '#FFFFFF', /* FORCED WHITE LINE */
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)', /* White fill with transparency */
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#00ADB5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...chartDefaults
+                }
+            });
+        } else {
+            hoursCtx.parentNode.innerHTML = '<div class="no-data-message" style="height: 300px; line-height: 300px;">No Weekly Hours Data Available.</div>';
+        }
+
+
+        // --- CHART 2: Employee Type Breakdown (Doughnut Chart) ---
+        // REQUESTED COLOR (Main Segment): Green (#4CAF50)
+        const typeCtx = document.getElementById('typeBreakdownChart');
+        if (chartData.typeBreakdown.data && chartData.typeBreakdown.data.length > 0) {
+            new Chart(typeCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.typeBreakdown.labels,
+                    datasets: [{
+                        data: chartData.typeBreakdown.data,
+                        // First color (largest segment) is Green, rest are secondary colors
+                        backgroundColor: ['#4CAF50', '#00ADB5', '#FFC107', '#A4B0BE'], /* FORCED GREEN SEGMENT */
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#EEEEEE' } // White text for legend
+                        }
+                    }
+                }
+            });
+        } else {
+            typeCtx.parentNode.innerHTML = '<div class="no-data-message" style="height: 300px; line-height: 300px;">No Employee Contract Data Available.</div>';
+        }
+
+
+        // --- CHART 3: Total Shifts Completed (Bar Chart) ---
+        // REQUESTED COLOR: White (#FFFFFF)
+        const shiftsCtx = document.getElementById('shiftsCompletedChart');
+        if (chartData.shiftsCompleted.data && chartData.shiftsCompleted.data.length > 0) {
+            new Chart(shiftsCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: chartData.shiftsCompleted.labels,
+                    datasets: [{
+                        label: 'Shifts Completed',
+                        data: chartData.shiftsCompleted.data,
+                        backgroundColor: '#FFFFFF', /* FORCED WHITE BAR */
+                        borderColor: '#FFFFFF',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...chartDefaults,
+                    scales: {
+                        y: {
+                            ...chartDefaults.scales.y,
+                            title: { display: true, text: 'Number of Shifts', color: '#EEEEEE' }
+                        }
+                    }
+                }
+            });
+        } else {
+            shiftsCtx.parentNode.innerHTML = '<div class="no-data-message" style="height: 300px; line-height: 300px;">No Shifts Completed Data Available.</div>';
+        }
+    </script>
+{% endblock %}

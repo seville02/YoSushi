@@ -1,0 +1,145 @@
+{% extends "admin_layout.html" %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    .main-title
+    {
+    color: #050505
+    }
+    /* 2. Ensure the form itself has the desired dark card background */
+    #edit-log-wrapper .edit-form {
+        color: #050505
+    }
+
+    /* 3. Button Color Fixes */
+    /* Back to Logs Button */
+    .back-button {
+        color: #e0e0e0 !important;
+        background-color: #333;
+        text-decoration: none;
+    }
+    .back-button:hover {
+        background-color: #555;
+    }
+
+    .submit-button {
+        color: white !important;
+        background-color: #6c757d;
+        text-decoration: none;
+        display: inline-block;
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
+    .submit-button:hover {
+        background-color: #5a6268;
+    }
+
+    /* Cancel Button */
+    .cancel-button {
+        color: white !important;
+        background-color: #6c757d;
+        text-decoration: none;
+        display: inline-block;
+        padding: 10px 15px;
+        border-radius: 4px;
+    }
+    .cancel-button:hover {
+        background-color: #5a6268;
+}
+        .container
+        {
+        background-color: #dfe8df;
+        padding: 10px;
+        }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="edit-log-wrapper" class="container">
+
+    <a href="{{ url_for('admin_logs') }}" class="back-button">← Back to Logs</a>
+
+    <h1 class="main-title">Edit Attendance Log ID: {{ log_id }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="edit-form">
+
+        <div class="card-section">
+            <h2 class="card-title">Clock Times</h2>
+
+            <div class="form-group">
+                <label for="clock_in">Clock In Time (HH:MM:SS):</label>
+                <input type="text" id="clock_in" name="clock_in"
+                       value="{{ log.clock_in }}"
+                       placeholder="HH:MM:SS" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="clock_out">Clock Out Time (HH:MM:SS - Optional):</label>
+                <input type="text" id="clock_out" name="clock_out"
+                       value="{{ log.clock_out if log.clock_out else '' }}"
+                       placeholder="HH:MM:SS" class="form-control">
+            </div>
+        </div>
+
+        <div class="card-section">
+            <h2 class="card-title">Existing Breaks ({{ breaks | length }} Cycle{{ 's' if breaks | length != 1 else '' }})</h2>
+
+            {% for b in breaks %}
+            <div class="break-cycle" data-break-id="{{ b.id }}">
+                <h3>Break #{{ loop.index }} (ID: {{ b.id }})</h3>
+
+                <div class="form-group break-group">
+                    <label for="break_start_{{ b.id }}">Start Time:</label>
+                    <input type="text" id="break_start_{{ b.id }}"
+                           name="break_start_{{ b.id }}"
+                           value="{{ b.break_start }}"
+                           placeholder="HH:MM:SS" class="form-control" required>
+                </div>
+
+                <div class="form-group break-group">
+                    <label for="break_end_{{ b.id }}">End Time (Leave empty if active):</label>
+                    <input type="text" id="break_end_{{ b.id }}"
+                           name="break_end_{{ b.id }}"
+                           value="{{ b.break_end if b.break_end else '' }}"
+                           placeholder="HH:MM:SS" class="form-control">
+                </div>
+
+                <button type="submit" name="delete_break" value="{{ b.id }}" class="delete-button">Update Break</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card-section new-break-section">
+            <h2 class="card-title">Add New Break Cycle (Optional)</h2>
+
+            <div class="form-group">
+                <label for="new_break_start">Start Time:</label>
+                <input type="text" id="new_break_start" name="new_break_start"
+                       placeholder="HH:MM:SS" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="new_break_end">End Time (Optional):</label>
+                <input type="text" id="new_break_end" name="new_break_end"
+                       placeholder="HH:MM:SS" class="form-control">
+            </div>
+        </div>
+
+        <button type="submit" class="submit-button">Save Changes</button>
+        <a href="{{ url_for('admin_logs') }}" class="cancel-button">Cancel</a>
+
+    </form>
+</div>
+{% endblock %}

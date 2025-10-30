@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YO! Sushi - Employee & Admin Login</title>
+
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary-color: #4CAF50;
+    --accent-color: #00ADB5;
+    --text-color: #EEEEEE;
+    --dark-bg: #222831;
+    --card-bg: #393E46;
+    --shadow-light: rgba(0, 173, 181, 0.5);
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+    --request-light: #FF80AB;
+    --yo-sushi-orange: #FF5722;
+    --content-max-width: 450px;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-color);
+    margin: 0;
+    /* Adjusted overall page padding for mobile */
+    padding: 30px 10px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* HEADER + LOGO */
+.app-header {
+    width: 100%;
+    max-width: var(--content-max-width);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.logo-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background-color: var(--yo-sushi-orange);
+    border: 5px solid var(--accent-color);
+    box-shadow: 0 0 15px rgba(0, 173, 181, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-text-wrapper {
+    text-align: center;
+    transform: skewX(-15deg) rotate(-5deg);
+}
+
+.logo-text-yo,
+.logo-text-sushi {
+    font-family: 'Oswald', sans-serif;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 0.85;
+    text-shadow: 2px 2px 3px rgba(0,0,0,0.4);
+}
+
+.logo-text-yo {
+    font-size: 4em;
+    margin: 0;
+}
+
+.logo-text-sushi {
+    font-size: 1.6em;
+    margin-top: -10px;
+    letter-spacing: 0.05em;
+}
+
+/* LOGIN MESSAGE */
+.login-message-banner {
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin: 5px auto 1px auto;
+    padding: 5px 20px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--request-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    text-align: center;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* LOGIN CARDS */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: var(--content-max-width);
+    width: 100%;
+    flex-grow: 1;
+}
+
+.login-card {
+    background-color: var(--card-bg);
+    padding: 30px 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px var(--shadow-dark), 0 0 15px var(--shadow-light) inset;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border: 1px solid rgba(0, 173, 181, 0.1);
+}
+
+.login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px var(--shadow-dark), 0 0 20px var(--shadow-light) inset;
+}
+
+.login-card h2 {
+    color: var(--accent-color);
+    font-size: 1.8em;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 25px;
+    text-align: center;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+}
+
+/* FORM ELEMENTS */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 400;
+    color: var(--text-color);
+}
+
+.login-card input[type="text"],
+.login-card input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    box-shadow: 0 2px 5px var(--shadow-dark) inset;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.login-card input[type="text"]:focus,
+.login-card input[type="password"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-color);
+    background-color: #4A515A;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 40px;
+}
+
+.password-wrapper .eye-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--accent-color);
+    font-size: 1.1em;
+    opacity: 0.7;
+}
+
+/* BUTTONS */
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.login-btn:hover {
+    background-color: #388E3C;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.flash-message {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--dark-bg);
+}
+
+.flash-message.success {
+    background-color: var(--primary-color);
+}
+
+.flash-message.error, .flash-message.warning {
+    background-color: #ff5757;
+}
+
+/* FOOTER */
+.watermark {
+    width: 100%;
+    max-width: var(--content-max-width);
+    margin-top: 35px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    font-size: 0.8em;
+    color: rgba(238, 238, 238, 0.6);
+}
+
+.watermark a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.watermark a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* --- MOBILE SPECIFIC ADJUSTMENTS --- */
+@media screen and (max-width: 400px) {
+    /* Target very small phones */
+    body {
+        padding: 15px 5px;
+    }
+
+    .logo-container {
+        /* FIX 1: Aggressively shrink logo size on tiny screens */
+        width: 110px;
+        height: 110px;
+        border-width: 3px;
+    }
+    .logo-text-yo {
+        /* FIX 2: Shrink 'YO!' text */
+        font-size: 2.8em;
+    }
+    .logo-text-sushi {
+        /* FIX 3: Shrink 'SUSHI' text */
+        font-size: 1.2em;
+        margin-top: -6px;
+    }
+
+    .login-card {
+        padding: 15px 10px;
+    }
+
+    .login-card h2 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+
+    .login-btn {
+        padding: 12px;
+        font-size: 1em;
+    }
+
+    .watermark {
+        margin-top: 20px;
+    }
+}
+@media screen and (min-width: 401px) and (max-width: 480px) {
+    /* Use the standard 480px adjustments for slightly larger phones */
+    .logo-container {
+        width: 120px;
+        height: 120px;
+        border-width: 4px;
+    }
+    .logo-text-yo {
+        font-size: 3.2em;
+    }
+    .logo-text-sushi {
+        font-size: 1.4em;
+        margin-top: -8px;
+    }
+    .login-card {
+        padding: 20px 15px;
+    }
+}
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="logo-container">
+            <div class="logo-text-wrapper">
+                <span class="logo-text-yo">YO!</span>
+                <span class="logo-text-sushi">SUSHI</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="login-container">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        {% if employee %}
+            <p><strong>Name:</strong> {{ employee['name'] }}</p>
+            <p><strong>Employee ID:</strong> {{ employee['emp_id'] }}</p>
+        {% else %}
+            <div class="login-message-banner">
+                Please log in to see your details.
+            </div>
+        {% endif %}
+
+        <div class="login-card employee-login">
+            <h2>Employee Login</h2>
+            <form method="POST" action="{{ url_for('home') }}">
+                <div class="form-group">
+                    <label for="emp_id">Employee ID:</label>
+                    <input type="text" id="emp_id" name="emp_id" required placeholder="Enter your ID">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" required placeholder="Enter Password">
+                        <i class="fas fa-eye eye-icon" id="togglePasswordEmp"></i>
+                    </div>
+                </div>
+                <button type="submit" class="login-btn" name="employee_login_submit">Employee Login</button>
+            </form>
+        </div>
+
+        <div class="login-card admin-login">
+            <h2>Admin Login</h2>
+            <form method="POST" action="{{ url_for('home') }}">
+                <div class="form-group">
+                    <label for="admin_username">Admin Username:</label>
+                    <input type="text" id="admin_username" name="admin_username" required placeholder="Enter Username">
+                </div>
+                <div class="form-group">
+                    <label for="admin_password">Password:</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="admin_password" name="admin_password" required placeholder="Enter Password">
+                        <i class="fas fa-eye eye-icon" id="togglePasswordAdmin"></i>
+                    </div>
+                </div>
+                <button type="submit" class="login-btn" name="admin_login_submit">Admin Login</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="watermark">
+        Developed by <a href="https://www.linkedin.com/in/seville-diniz-bb182615a" target="_blank">Seville Diniz</a><br>
+        <i class="fas fa-envelope"></i> sevillediniz02@gmail.com
+    </footer>
+
+    <script>
+        const togglePasswordEmp = document.getElementById('togglePasswordEmp');
+        if (togglePasswordEmp) {
+            togglePasswordEmp.addEventListener('click', function () {
+                const passwordInput = document.getElementById('password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        const togglePasswordAdmin = document.getElementById('togglePasswordAdmin');
+        if (togglePasswordAdmin) {
+            togglePasswordAdmin.addEventListener('click', function () {
+                const passwordInput = document.getElementById('admin_password');
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        const flashMessages = document.querySelectorAll('.flash-message');
+        if (flashMessages.length > 0) {
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.transition = 'opacity 1s ease-out';
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 1000);
+                }, 1000);
+            });
+        }
+    </script>
+</body>
+</html>

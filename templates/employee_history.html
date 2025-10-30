@@ -1,0 +1,374 @@
+{% extends "employee_base.html" %}
+
+{% block title %}Attendance History{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --color-primary: #2b6777;
+            --color-secondary: #52ab98;
+            --color-light-bg: #f5f8fa;
+            --color-border: #eee;
+            --color-text: #333;
+            --color-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --color-duration-bg: #e0f7fa;
+            --color-duration-text: #00796b;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            overflow-x: hidden;
+        }
+
+        .header-container {
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--color-primary);
+            font-size: 2.4em;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--color-secondary);
+            display: flex;
+            align-items: center;
+        }
+        h1::before {
+            content: '⌚';
+            margin-right: 15px;
+            font-size: 1.1em;
+        }
+        .header-container p {
+            color: #777;
+            font-size: 1em;
+            margin-top: -5px;
+        }
+        .no-logs-message {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            border-left: 5px solid #ffc107;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        /* ------------------------------------------------ */
+        /* 1. ATTENDANCE TABLE STYLING */
+        /* ------------------------------------------------ */
+        .history-table-container {
+            border-radius: 12px;
+            overflow-x: auto; /* Allows horizontal scrolling for table */
+            border: 1px solid var(--color-border);
+            margin-bottom: 20px;
+        }
+        .history-table {
+            width: 100%;
+            min-width: 400px; /* Ensure table doesn't collapse too much */
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.95em;
+        }
+
+        /* Table Headers */
+        .history-table thead th {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .history-table thead tr th:first-child { border-top-left-radius: 12px; }
+        .history-table thead tr th:last-child { border-top-right-radius: 12px; }
+
+        /* Table Body */
+        .history-table tbody td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .history-table tbody tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+        .history-table tbody tr:hover {
+            background-color: #e6f7ff;
+            cursor: default;
+        }
+
+        /* Highlight Date */
+        .history-table td:first-child {
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        /* Highlight Duration Column */
+        .history-table td:last-child {
+            font-weight: bold;
+            text-align: center;
+            background-color: var(--color-duration-bg);
+            color: var(--color-duration-text);
+            border-left: 3px solid var(--color-secondary);
+        }
+
+        /* ------------------------------------------------ */
+        /* 2. PAGINATION STYLING */
+        /* ------------------------------------------------ */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--color-shadow);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .page-info {
+            font-weight: 600;
+            color: var(--color-primary);
+            font-size: 1.0em;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .btn-page {
+            text-decoration: none;
+            padding: 8px 15px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-primary);
+            background-color: white;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        .btn-page:hover:not(.disabled):not(.active) {
+            background-color: var(--color-secondary);
+            color: white;
+            border-color: var(--color-secondary);
+            transform: translateY(-1px);
+        }
+        .btn-page.active {
+            background-color: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .btn-page.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            background-color: #f8f8f8;
+            color: #aaa;
+            border-color: #eee;
+        }
+
+        /* ------------------------------------------------ */
+        /* 3. BACK BUTTON BANNER */
+        /* ------------------------------------------------ */
+        .dashboard-link-banner {
+            background-color: var(--color-primary);
+            color: white;
+            display: inline-block;
+            width: auto;
+            min-width: 220px;
+            text-align: center;
+            padding: 12px 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .dashboard-link-banner:hover {
+            background-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ======================================================= */
+        /* MOBILE MEDIA QUERY (Max-width 600px) */
+        /* ======================================================= */
+        @media (max-width: 600px) {
+
+            div {
+                padding: 0 10px; /* Adjust content padding */
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+            }
+            h1::before {
+                font-size: 1em;
+            }
+            .header-container {
+                margin-bottom: 15px;
+            }
+            .header-container p {
+                font-size: 0.9em;
+            }
+
+            /* Back Button */
+            .dashboard-link-banner {
+                width: 100%;
+                min-width: unset;
+                text-align: center;
+                margin-bottom: 15px;
+                padding: 10px 15px;
+            }
+
+            /* Table Cells */
+            .history-table tbody td, .history-table thead th {
+                padding: 10px 15px; /* Reduced cell padding */
+                font-size: 0.9em;
+            }
+
+            /* Pagination */
+            .pagination-container {
+                flex-direction: column; /* Stack info and buttons */
+                padding: 10px;
+            }
+            .page-info {
+                order: 2; /* Move info to the bottom */
+                font-size: 0.9em;
+                margin-top: 5px;
+            }
+            .pagination-buttons {
+                order: 1; /* Move buttons to the top */
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-page {
+                padding: 6px 12px;
+                font-size: 0.85em;
+                flex-grow: 1;
+                min-width: 40px;
+                text-align: center;
+            }
+
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div>
+<a href="{{ url_for('employee_dashboard', emp_id=employee['emp_id']) }}" class="dashboard-link-banner">
+    ← Back to Dashboard
+    </a>
+
+    <div class="header-container">
+        <h1>Attendance History</h1>
+        {% if logs %}
+            <p>Showing logs for the last 7 days (Page {{ current_page }} of {{ total_pages | default(1) }})</p>
+        {% else %}
+            <p>Showing logs for the last 7 days.</p>
+        {% endif %}
+    </div>
+
+    {% if logs %}
+        <div class="history-table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Clock In</th>
+                        <th>Clock Out</th>
+                        <th>Duration (Hrs)</th>
+                    </tr>
+                </thead>
+                   <tbody>
+                    {% for log in logs %}
+                    {# --- ROBUST VARIABLE ASSIGNMENT --- #}
+                    {% set clock_in_dt = log.get('clock_in', '') | default("") %}
+                    {% set clock_out_dt = log.get('clock_out', '') | default("") %}
+                    {% set log_date = log.get('date', '') | default("") %}
+
+                    {# Safely extract TIME part #}
+                    {% set clock_in_time = clock_in_dt.split(' ')[1] if ' ' in clock_in_dt else clock_in_dt %}
+                    {% set clock_out_time = clock_out_dt.split(' ')[1] if ' ' in clock_out_dt else clock_out_dt %}
+
+                    <tr>
+                        {# Date #}
+                        <td>{{ log_date }}</td>
+
+                        {# Clock In Time #}
+                        <td>{{ clock_in_time | default('N/A') }}</td>
+
+                        {# Clock Out Time #}
+                        <td>{{ clock_out_time | default('N/A') }}</td>
+
+                        {# Duration Calculation #}
+                        <td>
+                            {% if clock_in_time and clock_out_time and clock_in_time != 'N/A' and clock_out_time != 'N/A' %}
+                                {% set start = datetime.strptime(log_date + ' ' + clock_in_time, '%Y-%m-%d %H:%M:%S') %}
+                                {% set end = datetime.strptime(log_date + ' ' + clock_out_time, '%Y-%m-%d %H:%M:%S') %}
+
+                                {% set duration_seconds = (end - start).total_seconds() %}
+                                {% set duration_hours = (duration_seconds / 3600) | round(2) %}
+
+                                {{ duration_hours }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# --- PAGINATION CONTROLS (Only render container if there's more than one page) --- #}
+        {% if total_pages > 1 %}
+            <div class="pagination-container">
+                <span class="page-info">Page {{ current_page }} of {{ total_pages }}</span>
+                <div class="pagination-buttons">
+                    {# Previous Button #}
+                    {% if current_page > 1 %}
+                        <a href="{{ url_for('employee_history', emp_id=emp_id, page=current_page - 1) }}" class="btn-page">← Previous</a>
+                    {% else %}
+                        <span class="btn-page disabled">← Previous</span>
+                    {% endif %}
+
+                    {# Page Number Links #}
+                    {% for p in range(1, total_pages + 1) %}
+                        <a href="{{ url_for('employee_history', emp_id=emp_id, page=p) }}" class="btn-page {% if p == current_page %}active{% endif %}">{{ p }}</a>
+                    {% endfor %}
+
+                    {# Next Button #}
+                    {% if current_page < total_pages %}
+                        <a href="{{ url_for('employee_history', emp_id=emp_id, page=current_page + 1) }}" class="btn-page">Next →</a>
+                    {% else %}
+                        <span class="btn-page disabled">Next →</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="no-logs-message">No attendance logs found for your profile.</p>
+    {% endif %}
+</div>
+{% endblock %}

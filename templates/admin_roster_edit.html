@@ -1,0 +1,294 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Weekly Roster Editor{% endblock %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Define variables based on your existing theme */
+        :root {
+            --primary-color: #00ADB5;
+            --dark-bg: #222831;
+            --header-bg: #393E46;
+            --grid-line-color: #4A515A;
+            --text-color: #EEEEEE;
+            --off-shift-bg: #FFCDD2;    /* Light Red for OFF */
+            --shift-bg: #C8E6C9;        /* Light Green for Assigned */
+            --employee-header-bg: #008C91;
+        }
+
+        /* --- Page Header and Utility Bar --- */
+        .page-header {
+            color: var(--primary-color);
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            width: 100%;
+        }
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+            background-color: var(--header-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .nav-btn:hover { background-color: #4A515A; }
+        .week-nav { display: flex; align-items: center; gap: 15px; }
+        .date-info strong { color: var(--primary-color); }
+        .prev-next-btn { background-color: var(--primary-color); color: var(--dark-bg); }
+        .prev-next-btn:hover { background-color: #008C91; color: white; }
+
+        /* --- Roster Grid Layout --- */
+        .roster-grid-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background-color: var(--header-bg);
+            width: 100%;
+        }
+        .roster-form {
+            display: grid;
+            /* Defines 1 employee column, 7 day columns, and 1 total column */
+            grid-template-columns: 150px repeat(7, 1fr) 100px;
+            min-width: 900px;
+        }
+
+        /* --- Grid Cells --- */
+        .cell {
+            padding: 10px 8px;
+            border: 1px solid var(--grid-line-color);
+            text-align: center;
+            font-size: 0.9em;
+            height: 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+            font-weight: 700;
+            height: 40px;
+            font-size: 1.0em;
+        }
+
+        /* Employee Name Column */
+        .employee-column .cell:not(.header) {
+            background-color: var(--employee-header-bg);
+            color: var(--text-color);
+            font-weight: 600;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        /* Shift Input Styling */
+        .shift-input {
+            width: 100%;
+            padding: 5px 2px;
+            border: none;
+            text-align: center;
+            font-size: 0.9em;
+            background: transparent;
+            color: var(--dark-bg);
+            box-sizing: border-box;
+        }
+
+        /* Conditional Cell Styling based on content */
+        .cell:not(.header) {
+            background-color: white; /* Default empty cell */
+        }
+        .off-shift-cell {
+            background-color: var(--off-shift-bg); /* Light Red */
+        }
+        .shift-assigned-cell {
+            background-color: var(--shift-bg); /* Light Green */
+        }
+
+        /* Input colors on colored backgrounds */
+        .off-shift-cell .shift-input { color: #8B0000; }
+        .shift-assigned-cell .shift-input { color: #004D40; }
+
+        /* --- Totals Row & Legend --- */
+        .totals-row .cell {
+            font-weight: 700 !important;
+            font-size: 1.0em !important;
+            color: var(--dark-bg);
+            border-top: 2px solid var(--grid-line-color);
+            height: 30px;
+        }
+        .daily-total-cell {
+            background-color: #B2DFDB !important;
+            color: #004D40;
+        }
+        .daily-total-cell.employee-column {
+            background-color: var(--primary-color) !important;
+            color: var(--dark-bg);
+        }
+        .totals-row .shift-input {
+            pointer-events: none;
+        }
+
+        .legend-container {
+            display: flex;
+            justify-content: flex-start;
+            gap: 30px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            width: 100%;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            border: 1px solid #333;
+        }
+        .legend-off { background-color: var(--off-shift-bg); }
+        .legend-shift { background-color: var(--shift-bg); }
+        .legend-total { background-color: var(--primary-color); }
+
+        /* --- Save Button --- */
+        .save-btn-container {
+            text-align: center;
+            margin: 30px 0;
+            width: 100%;
+        }
+        .save-btn {
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .save-btn:hover { background-color: #388E3C; }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-header">Weekly Roster Editor</h1>
+
+    <div class="utility-bar">
+        <a href="{{ url_for('admin_panel') }}" class="back-btn nav-btn">
+            <i class="fas fa-arrow-left"></i> Back to Admin Panel
+        </a>
+
+        <div class="week-nav">
+            <a href="{{ previous_week_url|default('#') }}" class="prev-next-btn nav-btn">
+                <i class="fas fa-chevron-left"></i> Previous Week
+            </a>
+            <div class="date-info">
+                Week: <strong>{{ current_start_date|default('YYYY-MM-DD') }}</strong> to
+                <strong>{{ current_end_date|default('YYYY-MM-DD') }}</strong>
+            </div>
+            <a href="{{ next_week_url|default('#') }}" class="prev-next-btn nav-btn">
+                Next Week <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="roster-grid-container">
+        <form method="POST" action="{{ url_for('admin_roster_editor', start_date=current_start_date) }}" id="roster-form" class="roster-form">
+
+            <input type="hidden" name="week_start_date" value="{{ current_start_date|default('') }}">
+
+            <div class="employee-column">
+                <div class="cell header">Employee</div>
+                {% for employee in employees %}
+                    <div class="cell">{{ employee.name }}</div>
+                {% endfor %}
+                <div class="cell totals-row daily-total-cell employee-column">TOTAL HOURS</div>
+            </div>
+
+            {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+
+            {% for header in date_headers %}
+                <div class="day-column">
+                    {% set day_name = header.split(' ')[0] %}
+                    <div class="cell header">
+                        {{ header }}
+                    </div>
+
+                    {% for employee in employees %}
+                        {% set field_name = 'shift_' + employee.id|string + '_' + day_name|lower %}
+                        {% set current_shift = week_data.get(employee.id, {}).get(day_name, '') %}
+
+                        {% set cell_class = '' %}
+                        {% if current_shift|upper == 'OFF' %}
+                            {% set cell_class = 'off-shift-cell' %}
+                        {% elif current_shift|length > 0 %}
+                            {% set cell_class = 'shift-assigned-cell' %}
+                        {% endif %}
+
+                        <div class="cell {{ cell_class }}">
+                            <input
+                                type="text"
+                                name="{{ field_name }}"
+                                class="shift-input"
+                                placeholder="Time or OFF"
+                                value="{{ current_shift }}"
+                            >
+                        </div>
+                    {% endfor %}
+
+                    <div class="cell totals-row daily-total-cell">
+                        {{ daily_totals.get(day_name, '0.0') }}h
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="employee-column">
+                <div class="cell header">Weekly Total</div>
+                {% for employee in employees %}
+                    <div class="cell totals-row daily-total-cell">
+                        {{ weekly_totals.get(employee.id, '0.0') }}h
+                    </div>
+                {% endfor %}
+                <div class="cell totals-row daily-total-cell" style="background-color: var(--employee-header-bg) !important; color: white;">&nbsp;</div>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="legend-container">
+        <div class="legend-item">
+            <span class="legend-color legend-shift"></span> Shift Assigned (e.g., 09:00-17:00)
+        </div>
+        <div class="legend-item">
+            <span class="legend-color legend-off"></span> Day Off (Enter 'OFF')
+        </div>
+        <div class="legend-item">
+            <span class="legend-color legend-total"></span> Total Scheduled Hours
+        </div>
+    </div>
+
+    <div class="save-btn-container">
+        <button type="submit" form="roster-form" class="save-btn">
+            <i class="fas fa-save"></i> Save Roster
+        </button>
+    </div>
+{% endblock %}

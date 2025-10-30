@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Attendance Logs View</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f2f2f2; }
+        .container { max-width: 1000px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+        th { background-color: #007BFF; color: white; }
+        tr:hover { background-color: #f5f5f5; }
+        a { text-decoration: none; color: #007BFF; }
+        .back { margin-top: 20px; display: inline-block; background: #007BFF; color: white; padding: 8px 15px; border-radius: 5px; transition: background-color 0.2s; }
+        .back:hover { background: #0056b3; }
+        .icon { font-size: 1.1em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Attendance Logs</h1>
+
+        <a href="{{ url_for('admin_panel') }}" class="back">← Back to Admin Panel</a>
+
+        {% if logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Clock In</th>
+                    <th>Break Start</th>
+                    <th>Break End</th>
+                    <th>Clock Out</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for idx, log in enumerate(logs, start=1) %}
+                <tr>
+                    <td>{{ idx }}</td>
+                    <td>{{ log['emp_id'] }}</td>
+                    <td>{{ log['name'] }}</td>
+                    <td>{{ log['date'] }}</td>
+                    <td>{{ log['clock_in'] or '' }}</td>
+                    <td>{{ log['break_start'] or '' }}</td>
+                    <td>{{ log['break_end'] or '' }}</td>
+                    <td>{{ log['clock_out'] or '' }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_log', log_id=log['id']) }}" class="icon">✏️</a>
+                        <a href="{{ url_for('delete_log', log_id=log['id']) }}" class="icon" onclick="return confirm('Delete log?');">🗑️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; margin-top: 20px;">No attendance logs found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

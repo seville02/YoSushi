@@ -1,0 +1,312 @@
+{% extends "employee_base.html" %}
+{% block title %}Roster for {{ employee_name }}{% endblock %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<div class="container-xl mt-5">
+    <h1 class="mb-4 text-center text-primary page-title-responsive" style="font-weight: 700;">
+        {{ employee_name }} Work Roster
+    </h1>
+
+    <div class="roster-header-layout">
+
+        <div class="nav-left-corner">
+            <a href="{{ url_for('employee_view_roster', emp_id=emp_id, week_offset=week_offset - 1) }}" class="btn btn-fancy-light btn-sm nav-arrow">
+                &lt;&lt; Last Week
+            </a>
+        </div>
+
+        <div class="nav-center-block-final">
+            <span class="text-secondary date-label" style="font-weight: 500;">Roster for:</span>
+            <span class="text-dark font-weight-bold date-range-text">{{ nav_dates.start }} to {{ nav_dates.end }}</span>
+            <div class="current-week-wrapper">
+                {% if current_week %}
+                    <span class="current-week-badge badge p-2">CURRENT WEEK</span>
+                {% else %}
+                    <a href="{{ url_for('employee_view_roster', emp_id=emp_id, week_offset=0) }}" class="current-week-badge btn btn-sm btn-info">Go to Current Week</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="nav-right-corner">
+            <a href="{{ url_for('employee_view_roster', emp_id=emp_id, week_offset=week_offset + 1) }}" class="btn btn-fancy-light btn-sm nav-arrow">
+                Next Week &gt;&gt;
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow rounded roster-table-container">
+        <table class="table table-striped table-hover roster-table mb-0">
+            <thead>
+                <tr class="bg-primary text-white">
+                    <th class="responsive-date-col">Date</th>
+                    <th class="responsive-day-col">Day</th>
+                    <th>Shift Time / Status</th>
+                    <th class="responsive-hide">Total Break (Min)</th>
+                    <th class="responsive-hide">Work Hours (Net)</th>
+                    <th class="responsive-hide">Total Hours (Gross)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shift in roster_data %}
+
+                <tr class="{{ shift.row_color }}">
+                    <td class="text-muted responsive-date-col">{{ shift.date }}</td>
+                    <td class="responsive-day-col"><span class="day-badge badge badge-secondary">{{ shift.day | upper }}</span></td>
+
+                    <td class="shift-details-cell">
+                        {% if shift.shift_name == 'DAY OFF' %}
+                            <span class="font-weight-bold">DAY OFF</span>
+                        {% else %}
+                            {% if shift.start_time and shift.end_time %}
+                                <span class="font-weight-bold">{{ shift.start_time }} - {{ shift.end_time }}</span>
+                            {% endif %}
+
+                            {% if shift.actual_status %}
+                                <br>
+                                {% set text_color = "text-muted" %}
+
+                                {% if "Logged" in shift.actual_status or "UNSCHEDULED LOG" in shift.actual_status %}
+                                    {% set text_color = "text-success" %}
+                                {% elif "Missed" in shift.actual_status or "DAY OFF" in shift.actual_status %}
+                                    {% set text_color = "text-danger" %}
+                                {% elif "Scheduled" in shift.actual_status %}
+                                    {% set text_color = "text-info" %}
+                                {% endif %}
+
+                                <small class="{{ text_color }} font-italic">{{ shift.actual_status }}</small>
+                            {% endif %}
+                        {% endif %}
+
+                        {# --- Mobile-only details (moved below shift status) --- #}
+                        <div class="mobile-time-details">
+                             <div class="time-detail-item">
+                                 <small class="text-muted">Break:</small>
+                                 {% if shift.shift_name == 'DAY OFF' or shift.break_min == 0 %}
+                                     <span class="text-muted font-weight-bold">-</span>
+                                 {% else %}
+                                     <span class="badge badge-info">{{ shift.break_min }} min</span>
+                                 {% endif %}
+                             </div>
+                             <div class="time-detail-item">
+                                 <small class="text-muted">Net:</small>
+                                 <span class="font-weight-bold {% if shift.status_class %}{{ shift.status_class }}{% elif shift.work_hours_net != '-' %}text-success{% else %}text-muted{% endif %}">
+                                     {{ shift.work_hours_net }}
+                                 </span>
+                             </div>
+                             <div class="time-detail-item">
+                                 <small class="text-muted">Gross:</small>
+                                 <span class="font-weight-bold {% if shift.total_hours_gross != '-' %}text-primary{% else %}text-muted{% endif %}">
+                                     {{ shift.total_hours_gross }}
+                                 </span>
+                             </div>
+                        </div>
+                        {# --- End Mobile-only details --- #}
+                    </td>
+
+                    <td class="time-data responsive-hide">
+                        {% if shift.shift_name == 'DAY OFF' or shift.break_min == 0 %}
+                            <span class="text-muted">-</span>
+                        {% else %}
+                            <span class="badge badge-info">{{ shift.break_min }} min</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="time-data font-weight-bold responsive-hide {% if shift.status_class %}{{ shift.status_class }}{% elif shift.work_hours_net != '-' %}text-success{% else %}text-muted{% endif %}">
+                        {{ shift.work_hours_net }}
+                    </td>
+
+                    <td class="time-data font-weight-bold responsive-hide {% if shift.total_hours_gross != '-' %}text-primary{% else %}text-muted{% endif %}">
+                        {{ shift.total_hours_gross }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+/* --- BASE STYLES --- */
+.container-xl {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.text-primary { color: #007bff !important; }
+.text-success { color: #28a745 !important; }
+.text-danger { color: #dc3545 !important; }
+.text-info { color: #17a2b8 !important; }
+.text-muted { color: #6c757d !important; }
+.text-dark { color: #343a40 !important; }
+.text-secondary { color: #6c757d !important; }
+.font-weight-bold { font-weight: 700 !important; }
+.font-italic { font-style: italic !important; }
+.badge { padding: 0.4em 0.6em; font-weight: 600; border-radius: .25rem; }
+.roster-table {
+    width: 100% !important;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    font-size: 0.95rem;
+}
+.roster-table th, .roster-table td {
+    padding: 0.75rem !important;
+    vertical-align: middle;
+}
+.roster-table thead tr { background-color: #007bff; color: white; }
+.time-data { text-align: center !important; }
+.day-badge { font-size: 95% !important; font-weight: 700; padding: 0.4em 0.8em; }
+
+/* Custom Row Colors (Retained) */
+.bg-success-subtle { background-color: #d1e7dd !important; }
+.bg-info-subtle { background-color: #cff4fc !important; }
+.bg-danger-subtle { background-color: #f8d7da !important; }
+
+/* --- HEADER AND NAVIGATION STYLES --- */
+.roster-header-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+.nav-center-block-final {
+    flex-basis: 50%;
+    text-align: center;
+    line-height: 1.2;
+}
+.nav-left-corner, .nav-right-corner {
+    flex-basis: 25%;
+}
+.nav-right-corner {
+    text-align: right;
+}
+.date-range-text {
+    font-size: 1.8rem;
+    display: block;
+    font-weight: 700 !important;
+    color: #333 !important;
+}
+.current-week-wrapper {
+    margin-top: 8px;
+}
+.btn-fancy-light {
+    background-color: #e9f7ff;
+    color: #007bff;
+    border: 1px solid #cceeff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.2), 0 4px 6px rgba(0,0,0,0.1);
+    text-decoration: none;
+    white-space: nowrap; /* Prevent button text from wrapping */
+}
+.btn-fancy-light:hover {
+    background-color: #d8f0ff;
+    color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.4), 0 6px 8px rgba(0,0,0,0.15);
+}
+.current-week-badge {
+    font-size: 90%;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background-color: #d9f5f9 !important;
+    color: #0d8b9f !important;
+    border: 1px solid #75d4e1;
+}
+
+/* --- MOBILE SPECIFIC STYLES --- */
+.mobile-time-details {
+    display: none; /* Hidden by default (desktop view) */
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid #eee;
+}
+.time-detail-item {
+    display: inline-block;
+    margin-right: 10px;
+}
+.shift-details-cell {
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    /* 1. Header Responsiveness */
+    .page-title-responsive {
+        font-size: 1.6rem !important; /* Smaller title */
+        margin-bottom: 10px !important;
+    }
+    .roster-header-layout {
+        flex-direction: column; /* Stack navigation items */
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .nav-left-corner, .nav-right-corner, .nav-center-block-final {
+        flex-basis: 100%;
+        width: 100%;
+        text-align: center;
+    }
+    .nav-left-corner a, .nav-right-corner a {
+        width: 48%; /* Make nav buttons wider */
+        max-width: 200px;
+        display: inline-block;
+        font-size: 0.85rem;
+    }
+    .date-label {
+        display: block;
+        font-size: 0.9rem;
+    }
+    .date-range-text {
+        font-size: 1.2rem; /* Smaller date range text */
+    }
+    .current-week-wrapper {
+        margin-top: 5px;
+    }
+
+    /* 2. Table Responsiveness (Hiding/Restructuring) */
+
+    /* Hide the non-essential columns on small screens */
+    .responsive-hide {
+        display: none !important;
+    }
+
+    /* Adjust remaining column widths */
+    .roster-table th, .roster-table td {
+        padding: 0.5rem !important;
+        font-size: 0.9rem;
+    }
+    .responsive-date-col {
+        width: 25%;
+        min-width: 80px;
+    }
+    .responsive-day-col {
+        width: 15%;
+        min-width: 60px;
+    }
+    .shift-details-cell {
+        min-width: 150px;
+        text-align: left;
+    }
+
+    /* Show Mobile Details */
+    .mobile-time-details {
+        display: block; /* Show the aggregated details */
+        margin-top: 8px;
+        border-top: 1px dashed #ccc;
+        padding-top: 5px;
+        font-size: 0.85rem;
+        display: flex; /* Arrange details horizontally */
+        justify-content: space-around;
+    }
+    .time-detail-item {
+        margin-right: 0;
+        text-align: center;
+        flex-grow: 1;
+    }
+}
+</style>
+{% endblock content %}

@@ -1,0 +1,289 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Add New Employee{% endblock %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- ADMIN THEME COLORS (Keep these consistent) --- */
+        :root {
+            --primary-color: #00ADB5;    /* Teal/Cyan */
+            --dark-bg: #222831;         /* Dark Grey/Black */
+            --header-bg: #393E46;       /* Medium Grey */
+            --text-color: #EEEEEE;      /* Off-White */
+            --card-bg: #2D333A;          /* Slightly lighter card background */
+            --success-btn: #4CAF50;     /* Green for Save */
+            --nav-btn-hover: #4A515A;
+            --warning-color: #FFC107;   /* Amber/Yellow for warnings/supervisor check */
+            --required-color: #F44336;  /* Red for required indication */
+        }
+
+        /* Adjusting Body Padding for Fixed Header (Crucial for Layout) */
+        body {
+            padding-top: 80px; /* Space for the fixed header */
+            padding-left: 10px; /* Small horizontal padding for mobile */
+            padding-right: 10px;
+        }
+
+        /* --- Page Header --- */
+        .page-header {
+            color: var(--primary-color);
+            /* Reduced font size for mobile */
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 95px auto 20px auto; /* Tighter vertical margin, centered */
+            border-bottom: 2px solid var(--header-bg);
+            padding-bottom: 8px;
+            max-width: 600px; /* Match container width */
+        }
+
+        /* --- Main Form Container --- */
+        .container-card {
+            background-color: var(--card-bg);
+            padding: 20px; /* Reduced padding for mobile */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            margin: 0 auto 30px auto; /* Tighter bottom margin */
+            color: var(--text-color);
+        }
+
+        /* --- Form Elements --- */
+        .form-group {
+            margin-bottom: 15px; /* Tighter vertical space between fields */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px; /* Tighter space between label and input */
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1em; /* Slight reduction in font size */
+        }
+
+        .required-label::after {
+            content: " *";
+            color: var(--required-color);
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px; /* Reduced padding */
+            border: 1px solid var(--header-bg);
+            border-radius: 4px; /* Reduced border radius */
+            box-sizing: border-box;
+            background-color: var(--header-bg);
+            color: var(--text-color);
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Supervisor Checkbox Group */
+        .supervisor-group {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid var(--warning-color);
+            border-radius: 4px;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        .supervisor-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px; /* Reduced margin */
+            transform: scale(1.1); /* Slight reduction */
+            accent-color: var(--warning-color);
+        }
+        .supervisor-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+            color: var(--warning-color);
+            font-size: 0.9em; /* Reduced font size */
+        }
+        .supervisor-group strong {
+            font-weight: 700;
+        }
+
+
+        /* Select Dropdown Arrow */
+        .form-control-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300ADB5%22%20d%3D%22M287%20197.35L146.2%2056.6%205.4%20197.35z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 8px top 50%; /* Adjusted position */
+            background-size: 8px auto; /* Reduced size */
+            padding-right: 25px; /* Adjusted padding */
+        }
+
+        /* --- Action Bar (Mobile-Optimized) --- */
+        .action-bar {
+            display: flex;
+            /* Wrap and justify space is good for desktop, but we need stack/full width for mobile */
+            flex-direction: column-reverse; /* Put submit on top of back button */
+            gap: 10px;
+            margin-top: 20px;
+        }
+        @media (min-width: 500px) {
+            .action-bar {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .nav-btn {
+                width: auto;
+            }
+            .submit-btn {
+                width: auto;
+            }
+        }
+
+        .nav-btn, .submit-btn {
+            width: 100%; /* Full width on mobile */
+            box-sizing: border-box;
+            justify-content: center; /* Center content in button */
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background-color: var(--header-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em; /* Reduced font size */
+            transition: background-color 0.2s;
+        }
+        .nav-btn:hover {
+            background-color: var(--nav-btn-hover);
+        }
+
+        .submit-btn {
+            padding: 12px 25px;
+            background-color: var(--success-btn);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em; /* Reduced font size */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #388E3C;
+        }
+
+        /* Flash Message Styling (for completeness) */
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        .alert-error { background-color: var(--required-color); color: white; }
+        .alert-success { background-color: var(--success-btn); color: white; }
+
+    </style>
+{% endblock head_extra %}
+
+{% block content %}
+    <h1 class="page-header">Add New Employee</h1>
+
+    <div class="container-card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+
+            {# --- CORE REQUIRED FIELDS --- #}
+            <div class="form-group">
+                <label for="emp_id" class="required-label">Employee ID (Must be Unique):</label>
+                <input type="text" id="emp_id" name="emp_id" class="form-control"
+                       value="{{ emp_id if emp_id else '' }}" required placeholder="e.g., 001">
+            </div>
+
+            <div class="form-group">
+                <label for="name" class="required-label">Employee Name:</label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="{{ name if name else '' }}" required placeholder="Enter employee's full name">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="required-label">Password:</label>
+                <input type="password" id="password" name="password" class="form-control"
+                       value="" required placeholder="Set initial password">
+            </div>
+
+            <div class="form-group">
+                <label for="employee_type" class="required-label">Employee Type (Contract):</label>
+                <select id="employee_type" name="employee_type" class="form-control form-control-select" required>
+                    <option value="" disabled selected>-- Select Type --</option>
+                    {# --- UPDATED OPTIONS --- #}
+                    <option value="Full-Time" {% if employee_type == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                    <option value="Part-Time" {% if employee_type == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                    <option value="Intern" {% if employee_type == 'Intern' %}selected{% endif %}>Intern</option>
+                </select>
+            </div>
+
+            {# --- Supervisor Checkbox --- #}
+            <div class="supervisor-group">
+                <input type="checkbox" id="is_supervisor" name="is_supervisor" value="Yes"
+                       {% if is_supervisor == 'Yes' %}checked{% endif %}>
+                <label for="is_supervisor">
+                    Check if this employee is a <strong>Supervisor</strong> (Adds secondary status)
+                </label>
+            </div>
+
+            {# --- Optional Contact/Address Fields --- #}
+            <div class="form-group">
+                <label for="phone_number">Phone No:</label>
+                <input type="text" id="phone_number" name="phone_number" class="form-control"
+                       value="{{ phone_number if phone_number else '' }}" placeholder="e.g., 087-1234567">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control"
+                       value="{{ email if email else '' }}" placeholder="e.g., user@company.com">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" class="form-control"
+                       value="{{ address if address else '' }}" placeholder="Enter employee's home address">
+            </div>
+
+            <div class="form-group">
+                <label for="hourly_rate">Hourly Rate (€)</label>
+                <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" step="0.01" placeholder="e.g., 15.50">
+            </div>
+
+            <div class="action-bar">
+                <a href="{{ url_for('admin_panel') }}" class="nav-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Admin Panel
+                </a>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-user-plus"></i> Add Employee
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

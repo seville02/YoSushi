@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Employee ID: {{ emp_id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* --- Flash Message Styling --- */
+
+        /* FIX: Centered Floating Flash Message Container */
+        .flash-messages-container {
+            position: fixed; /* Ensures it floats */
+            top: 20px;
+            left: 50%; /* Start at 50% from the left */
+            transform: translateX(-50%); /* Pull back 50% of its own width to center */
+            z-index: 1000; /* Ensures it's on top of everything */
+            max-width: 450px; /* Increased max-width for better centering on larger screens */
+            width: 90%;
+            pointer-events: none; /* Allows clicks through to elements underneath */
+        }
+
+        /* Basic Flash Message Styling (Adjust colors to match your theme) */
+        .flash-messages-container .alert {
+            padding: 15px;
+            margin: 0 auto 15px auto; /* Centers the individual message */
+            border-radius: 4px;
+            font-weight: 600;
+            opacity: 0.95;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.5s ease-out; /* For smooth fading */
+            text-align: center;
+            pointer-events: auto; /* Re-enables pointer events on the message itself */
+        }
+        .flash-messages-container .alert-success {
+            background-color: var(--success-color, #4CAF50);
+            color: white;
+        }
+        .flash-messages-container .alert-error {
+            background-color: var(--error-color, #FF6B6B);
+            color: white;
+        }
+
+        /* --- Container and Form Styling (As before) --- */
+        .edit-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: var(--card-bg, #393E46);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: var(--text-color, #EEEEEE);
+        }
+        h1 {
+            color: var(--primary-color, #00ADB5);
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #2e333b;
+            color: white;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .submit-button {
+            padding: 10px 20px;
+            background-color: var(--primary-color, #00ADB5);
+            color: #222831;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.2s;
+        }
+        .submit-button:hover {
+            background-color: #008D95;
+        }
+        .cancel-link {
+            margin-left: 15px;
+            color: #ccc;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flash-messages-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="edit-container">
+        <h1>Edit Employee ID: {{ emp_id }}</h1>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="{{ employee.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="employee_type">Employee Type:</label>
+                <select id="employee_type" name="employee_type">
+                    {% set current_type = employee.employee_type|default('Full-Time') %}
+                    <option value="Full-Time" {% if current_type == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                    <option value="Part-Time" {% if current_type == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                    <option value="Contract" {% if current_type == 'Contract' %}selected{% endif %}>Contract</option>
+                    <option value="Intern" {% if current_type == 'Intern' %}selected{% endif %}>Intern</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" id="phone_number" name="phone_number" value="{{ employee.phone_number|default('') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address:</label>
+                <input type="email" id="email" name="email" value="{{ employee.email|default('') }}">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_supervisor" {% if employee.is_supervisor and employee.is_supervisor != 0 %}checked{% endif %}>
+                    Is Supervisor
+                </label>
+            </div>
+
+            <button type="submit" class="submit-button">Save Changes</button>
+            <a href="{{ url_for('view_all_employees') }}" class="cancel-link">Cancel</a>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select all flash messages
+            const alerts = document.querySelectorAll('.flash-messages-container .alert');
+
+            // Set a timer to fade them out after 4 seconds (4000 milliseconds)
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0'; // Start the fade transition
+
+                    // Remove the element from the DOM after the transition is complete
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500); // Wait for the 0.5s transition defined in CSS
+
+                }, 4000); // 4 seconds delay before starting the fade
+            });
+        });
+    </script>
+</body>
+</html>

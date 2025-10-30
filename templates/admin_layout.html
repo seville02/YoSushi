@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #00ADB5;
+            --secondary-color: #4CAF50;
+            --dark-bg: #222831;
+            --card-bg: #393E46;
+            --text-color: #EEEEEE;
+            --error-color: #FF6B6B;
+            --shadow-dark: rgba(0, 0, 0, 0.4);
+        }
+
+        html, body {
+            height: auto;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--dark-bg);
+            /* FIX 2: Increase top padding for fixed header on mobile (later reduced via media query) */
+            padding-top: 60px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header/Navigation Styles */
+        .admin-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            padding: 10px 4px;
+            box-shadow: 0 4px 10px var(--shadow-dark);
+            display: flex;
+            /* FIX 3: Start with column layout for small screens and revert later */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .admin-header h1 {
+            color: var(--primary-color);
+            margin: 0 0 5px 0; /* Adjusted margin for centered/stacked layout */
+            font-size: 1.4em;
+            min-width: 150px;
+            text-decoration: none;
+            padding-left: 0;
+        }
+        .admin-header nav {
+            flex-grow: 1;
+            text-align: center;
+            white-space: normal;
+            padding-right: 0;
+            /* FIX 4: Use flex wrap for navigation links */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .admin-header nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin: 4px 5px; /* Better spacing for wrapped links */
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
+            font-weight: 400;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+        .admin-header nav a:hover,
+        .admin-header nav a.active {
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+        }
+        .admin-header nav a i {
+             margin-right: 5px;
+        }
+
+        /* FIX 5: Media Query to switch back to desktop layout at 801px */
+        @media (min-width: 801px) {
+            .admin-header {
+                flex-direction: row; /* Switch back to row */
+                justify-content: space-between;
+                padding: 10px 4px;
+            }
+            .admin-header h1 {
+                padding-left: 15px; /* Restore left padding */
+                margin: 0;
+            }
+            .admin-header nav {
+                justify-content: flex-end; /* Restore right alignment */
+                padding-right: 15px;
+            }
+            .admin-header nav a {
+                 margin-left: 10px;
+                 margin-right: 0;
+            }
+        }
+
+        /* Flash Message Styles */
+        .flash-container {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            max-width: 90%;
+            z-index: 1000;
+            padding: 10px 20px;
+            border: 2px solid;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            font-weight: 600;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            /* FIX 6: Adjust margin-top to account for the larger mobile header */
+            margin-top: 50px;
+        }
+        /* ... (rest of flash message styles are unchanged) ... */
+        .flash-success {
+            background-color: #388E3C;
+            color: white;
+            border-color: #66BB6A;
+        }
+        .flash-error, .flash-danger {
+            background-color: #C62828;
+            color: white;
+            border-color: var(--error-color);
+        }
+        .flash-info {
+            background-color: #0288D1;
+            color: white;
+            border-color: #4FC3F7;
+        }
+
+        /* Styles for the main content area */
+        .main-content {
+            width: 95%; /* Use more screen space on mobile */
+            max-width: 1200px;
+            margin: 20px 0;
+        }
+
+        /* FIX 7: Adjust body padding for small headers */
+        @media (max-width: 500px) {
+            body {
+                /* Reduce body padding when the header wraps significantly, giving more space for content */
+                padding-top: 100px;
+            }
+            .flash-container {
+                margin-top: 100px;
+            }
+        }
+    </style>
+
+    {% block head_extra %}{% endblock %}
+</head>
+
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div id="flash-message" class="flash-container flash-{{ category }}">
+                    {{ message | safe }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-header">
+        <h1>Admin Console</h1>
+        <nav>
+            <a href="{{ url_for('admin_panel') }}"><i class="fas fa-chart-bar"></i> Dashboard</a>
+            <a href="{{ url_for('admin_roster_editor') }}"><i class="fas fa-calendar-alt"></i> Roster Editor</a>
+            <a href="{{ url_for('admin_graphs') }}"><i class="fas fa-chart-bar"></i> View Analytics</a>
+            <a href="{{ url_for('manage_requests') }}"><i class="fas fa-bell"></i> Employee requests</a>
+            <a href="{{ url_for('change_admin_password') }}"><i class="fas fa-lock"></i> Change Password</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Flash message timeout script
+        document.addEventListener('DOMContentLoaded', function() {
+            var flashMessage = document.getElementById('flash-message');
+            if (flashMessage) {
+                setTimeout(function() {
+                    flashMessage.style.opacity = '0';
+                }, 3500);
+                setTimeout(function() {
+                    flashMessage.remove();
+                }, 4000);
+            }
+        });
+    </script>
+    {% block scripts_extra %}{% endblock %}
+
+</body>
+</html>

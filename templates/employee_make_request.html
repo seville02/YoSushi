@@ -1,0 +1,365 @@
+{% extends "employee_base.html" %}
+
+{% block title %}Submit Request{% endblock %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* UNIVERSAL RESET: CRUCIAL FOR FIXING HORIZONTAL SCROLLING */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* --- Base & Typography --- */
+        body {
+            font-family: sans-serif;
+            /* Prevent scroll on body if content already fits */
+            overflow-x: hidden;
+        }
+        h1 {
+            color: #2b6777;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #52ab98;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        /* --- Layout Structure Adjustments (CRITICAL for containing width) --- */
+        .main-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            float: none;
+            /* Ensure the main content uses the available width without overflow */
+            width: 100%;
+        }
+
+        /* --- Back Button Style --- */
+        .dashboard-link-banner-fixed {
+            background-color: #333;
+            color: white !important;
+            display: inline-block;
+            width: auto;
+            min-width: 180px;
+            text-align: center;
+            padding: 12px 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+            text-decoration: none !important;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .dashboard-link-banner-fixed:hover {
+            background-color: #52ab98;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Form Container --- */
+        .request-form-container {
+            max-width: 650px;
+            margin: 0 auto 35px auto;
+            padding: 30px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #2b6777;
+        }
+        .request-form-container h3 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95em;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+            font-size: 1em;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: #52ab98;
+            box-shadow: 0 0 5px rgba(82, 171, 152, 0.5);
+            outline: none;
+        }
+
+        /* --- Submit Button --- */
+        .btn-primary {
+            background-color: #2b6777;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #52ab98;
+            transform: translateY(-1px);
+        }
+
+        /* --- History Table --- */
+        .history-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .requests-table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        .requests-table th, .requests-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+        .requests-table th {
+            background-color: #52ab98;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        .requests-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .requests-table tr:hover { background-color: #e0f7fa; }
+        .requests-table tbody tr:last-child td { border-bottom: none; }
+
+        /* --- Status Badges --- */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.Pending { background-color: #ffc107; color: #333; }
+        .status-badge.Accepted { background-color: #4CAF50; color: white; }
+        .status-badge.Rejected { background-color: #F44336; color: white; }
+        .status-badge.N\/A { background-color: #ccc; color: #333; }
+        .no-requests-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        /* --- Pagination --- */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination a, .pagination span {
+            text-decoration: none;
+            color: #2b6777;
+            padding: 8px 12px;
+            margin: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+        }
+        .pagination span.current-page {
+            background-color: #2b6777;
+            color: white;
+            border: 1px solid #2b6777;
+            font-weight: bold;
+        }
+
+        /* =======================================================
+           MOBILE MEDIA QUERY (Max-width 600px)
+           ======================================================= */
+        @media (max-width: 600px) {
+            .main-content {
+                padding: 10px;
+                width: 100%;
+            }
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 15px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+
+            /* Form Adjustments */
+            .request-form-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .request-form-container h3 {
+                font-size: 1.2em;
+            }
+            .form-group input, .form-group textarea, .form-group select {
+                padding: 10px;
+                font-size: 0.95em;
+            }
+            .btn-primary {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+            /* Back Button */
+            .dashboard-link-banner-fixed {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+
+            /* Table Adjustments */
+            .requests-table th, .requests-table td {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+
+            .pagination a, .pagination span {
+                padding: 6px 10px;
+                margin: 2px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+
+    <div class="main-content">
+
+        <a href="{{ url_for('employee_dashboard', emp_id=employee.emp_id) }}" class="dashboard-link-banner-fixed">
+            ← Back to Dashboard
+        </a>
+
+        <h1>📝 Submit a New Request</h1>
+
+        <div class="request-form-container">
+            <h3>New Submission</h3>
+            <form method="POST" action="{{ url_for('employee_make_request', emp_id=employee.emp_id) }}">
+
+                <div class="form-group">
+                    <label for="request_type">Request Type:</label>
+                    <select id="request_type" name="request_type" required>
+                        <option value="">-- Select Request Type --</option>
+                        <option value="Time Off">Time Off</option>
+                        <option value="Shift Swap">Shift Swap</option>
+                        <option value="General Query">General Query</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">End Date (If applicable):</label>
+                    <input type="date" id="end_date" name="end_date">
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">Reason/Details:</label>
+                    <textarea id="reason" name="reason" rows="5" required></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Submit Request</button>
+            </form>
+        </div>
+
+        <h2>History of Your Requests</h2>
+
+        {% if requests %}
+            <div class="history-table-container">
+                <table class="requests-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Date(s)</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td>{{ req.request_type | default('N/A') }}</td>
+
+                            <td>
+                                {{ req.start_date | default('N/A') }}
+                                {% if req.end_date %}
+                                    - {{ req.end_date }}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% set submission_date = req.get('date_submitted') or req.get('submitted_at') %}
+                                {{ (submission_date or "").split(' ')[0] }}
+                            </td>
+
+                            <td>
+                                <span class="status-badge {{ req.status | default('N/A') }}">
+                                    {{ req.status | default('N/A') }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {# --- PAGINATION CONTROLS --- #}
+                {% if total_pages > 1 %}
+                    <div class="pagination">
+                        {% if page > 1 %}
+                            <a href="{{ url_for('employee_make_request', emp_id=employee.emp_id, page=page - 1) }}">&laquo; Previous</a>
+                        {% endif %}
+
+                        {% for p in pages %}
+                            {% if p == page %}
+                                <span class="current-page">{{ p }}</span>
+                            {% else %}
+                                <a href="{{ url_for('employee_make_request', emp_id=employee.emp_id, page=p) }}">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page < total_pages %}
+                            <a href="{{ url_for('employee_make_request', emp_id=employee.emp_id, page=page + 1) }}">Next &raquo;</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                {# --- END PAGINATION CONTROLS --- #}
+
+            </div>
+        {% else %}
+            <p class="no-requests-message">You have not submitted any requests yet.</p>
+        {% endif %}
+    </div>
+
+{% endblock content %}

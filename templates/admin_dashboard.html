@@ -1,0 +1,230 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin Dashboard | System Overview{% endblock %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    /* --- Mobile-Optimized Dashboard Styles --- */
+
+    /* Global Context (Assuming dark theme variables exist in admin_layout or a linked CSS) */
+    :root {
+        --primary-color: #00ADB5;    /* Teal/Cyan Accent */
+        --card-bg: #393E46;          /* Slightly lighter card background */
+        --dark-bg: #222831;          /* Deep Charcoal Background */
+        --text-color: #EEEEEE;       /* Light text on dark background */
+        --shadow-dark: rgba(0, 0, 0, 0.4);
+        --grid-line-color: #4A515A;
+    }
+
+    /* Adjusting Body Padding for Fixed Header (Crucial for Layout) */
+    body {
+        padding-top: 80px; /* Space for the fixed header */
+    }
+
+    /* --- Headings & Layout --- */
+    .page-title {
+        color: var(--text-color);
+        text-align: center;
+        /* Tighter spacing for mobile */
+        font-size: 2em;
+        margin: 80px 0 30px;
+    }
+    h2 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--grid-line-color);
+        padding-bottom: 5px;
+        /* Tighter spacing */
+        margin-top: 25px;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+    .dashboard-grid {
+        /* Adds horizontal padding on smaller screens */
+        padding: 0 15px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* --- Stat Cards (Responsive Grid) --- */
+    .stat-cards {
+        /* Mobile: Cards will stack, then grow into a grid on larger screens */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px; /* Tighter gap */
+        margin-bottom: 30px; /* Tighter margin */
+    }
+    .card {
+        background: var(--card-bg);
+        padding: 15px; /* Reduced padding for mobile */
+        border-radius: 8px; /* Smaller radius */
+        box-shadow: 0 3px 8px var(--shadow-dark);
+        text-align: center;
+        min-height: 120px; /* Reduced height */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .card h3 {
+        color: var(--primary-color);
+        margin-top: 0;
+        font-size: 1.1em; /* Reduced font size */
+    }
+    .stat-number {
+        font-size: 2.5em; /* Reduced font size */
+        font-weight: 700;
+        margin: 5px 0 10px;
+    }
+    .stat-number.primary { color: #5DADE2; }
+    .stat-number.secondary { color: #FFD700; }
+    .stat-number-small {
+        font-size: 1.5em; /* Reduced font size */
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 10px 0;
+    }
+    .view-link, .small-action-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+    .view-link:hover, .small-action-link:hover {
+        color: #008C91;
+        text-decoration: underline;
+    }
+    /* Fixing layout issue on the Admin ID card */
+    .user-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 5px;
+    }
+
+    /* --- Quick Actions (Stacking Buttons) --- */
+    .quick-actions {
+        display: flex;
+        gap: 15px; /* Tighter gap */
+        margin-bottom: 30px; /* Tighter margin */
+        flex-direction: column; /* Force vertical stacking on mobile */
+    }
+    @media (min-width: 600px) {
+        /* Switch to horizontal layout on tablets/desktop */
+        .quick-actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            flex-grow: 1;
+            max-width: none;
+        }
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px; /* Reduced padding */
+        text-decoration: none;
+        border-radius: 6px; /* Reduced radius */
+        font-size: 1em; /* Reduced font size */
+        font-weight: 600;
+        transition: background-color 0.2s, transform 0.2s;
+        justify-content: center;
+        max-width: 100%; /* Ensure full width on mobile */
+    }
+    .primary-action {
+        background-color: var(--primary-color);
+        color: var(--dark-bg);
+    }
+    .secondary-action {
+        background-color: #5A6270;
+        color: var(--text-color);
+    }
+    .primary-action:hover {
+        background-color: #008C91;
+        color: white;
+        transform: translateY(-2px);
+    }
+    .secondary-action:hover {
+        background-color: #4A515A;
+        transform: translateY(-2px);
+    }
+
+    /* --- Recent Activity Box --- */
+    .recent-activity-box {
+        background: var(--card-bg);
+        padding: 15px; /* Reduced padding */
+        border-radius: 8px;
+        box-shadow: 0 3px 8px var(--shadow-dark);
+        min-height: 80px;
+        font-size: 0.9em;
+    }
+    .active-shifts-list {
+        list-style: none;
+        padding: 0;
+    }
+    .active-shifts-list li {
+        padding: 5px 0;
+        border-bottom: 1px dashed var(--grid-line-color);
+    }
+</style>
+{% endblock head_extra %}
+
+{% block content %}
+    <div class="dashboard-grid">
+
+        <h1 class="page-title">Welcome, Administrator!</h1>
+
+        <h2>System Overview</h2>
+        <div class="stat-cards">
+
+            <div class="card">
+                <h3>Total Employees</h3>
+                <p class="stat-number primary">{{ total_employees|default('0') }}</p>
+                <a href="{{ url_for('manage_employees') }}" class="view-link">View List →</a>
+            </div>
+
+            <div class="card">
+                <h3>Pending Requests</h3>
+                <p class="stat-number secondary">{{ pending_requests|length|default('0') }}</p>
+                <a href="{{ url_for('manage_requests') }}" class="view-link">Manage Requests →</a>
+            </div>
+
+            <div class="card">
+                <h3>Admin ID / User</h3>
+                <p class="stat-number-small">{{ session.get('username')|default('N/A') }} / admin</p>
+                <div class="user-actions">
+                    <a href="{{ url_for('change_admin_password') }}" class="small-action-link">Change Password</a>
+                </div>
+            </div>
+
+        </div>
+
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="{{ url_for('admin_roster_editor') }}" class="action-btn primary-action">
+                <i class="fas fa-calendar-alt"></i> Create/Edit Roster
+            </a>
+
+            <a href="{{ url_for('add_employee') }}" class="action-btn secondary-action">
+                <i class="fas fa-user-plus"></i> Add New Employee
+            </a>
+        </div>
+
+        <h2>System Logs / Recent Activity</h2>
+        <div class="recent-activity-box">
+            <p>Placeholder for dynamic data like recent clock-ins or system alerts ...</p>
+            {% if active_shifts %}
+                <ul class="active-shifts-list">
+                    {% for shift in active_shifts %}
+                        <li><strong>{{ shift.name }}</strong> clocked in at {{ shift.clock_in }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No employees currently clocked in.</p>
+            {% endif %}
+        </div>
+
+    </div>
+{% endblock %}

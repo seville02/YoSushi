@@ -1,0 +1,75 @@
+<html>
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin Dashboard Menu{% endblock %}
+
+{% block content %}
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body>
+    <div class="admin-menu">
+        <h1>Admin Dashboard</h1>
+
+        <a href="{{ url_for('admin_logs') }}"><i class="fas fa-file-alt"></i> View Attendance Logs</a>
+
+        <a href="{{ url_for('weekly_report') }}"><i class="fas fa-file-export"></i> Generate Weekly Report</a>
+
+         <a href="{{ url_for('view_all_employees') }}">👥View all the Employees</a>
+
+        <a href="{{ url_for('admin_roster_editor') }}"><i class="fas fa-calendar-alt"></i> Employee Roster</a>
+
+<a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-user-cog"></i> Employee Management</a>
+
+        <a href="{{ url_for('add_employee') }}"><i class="fas fa-user-plus"></i> Add New Employee</a>
+
+    </div>
+</body>
+    <style>
+        .admin-menu {
+        background-color: #dcf5dd;
+            max-width: 500px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow-dark);
+            border: 1px solid var(--primary-color);
+        }
+        .admin-menu h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .admin-menu a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 18px;
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+            border: 2px solid #00ADB5;
+        }
+        .admin-menu a:last-child {
+            margin-bottom: 0;
+        }
+        .admin-menu a:hover {
+            background-color: #008C91;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .admin-menu a i {
+            font-size: 1.3em;
+        }
+    </style>
+{% endblock %}
+</html>

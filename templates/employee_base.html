@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>{% block title %}Employee Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        /* --- General Layout --- */
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            /* CRITICAL: Prevent body itself from allowing horizontal scroll caused by children */
+            overflow-x: hidden;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            gap: 20px;
+            /* CRITICAL: Reduced horizontal padding on the wrapper for max space on mobile */
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        /* --- HEADER STYLES (MOVED FROM INLINE) --- */
+        .employee-header {
+            background: #2b6777;
+            color: #fff;
+            /* ADJUSTMENT 1: Use a fixed small padding instead of percentage to prevent edge cases */
+            padding: 15px 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header-content .portal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .header-content .employee-info {
+            font-size: 1rem;
+            text-align: right;
+            white-space: nowrap; /* Ensures "Hello, **Name** | Logout" stays on one line if possible */
+        }
+        .header-content .employee-info a {
+            color: #52ab98;
+            text-decoration: none;
+        }
+
+        /* --- Sidebar Style (Unchanged) --- */
+        .employee-sidebar {
+            min-width: 200px;
+            width: 250px;
+            padding: 20px;
+            background: #2b6777;
+            color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        .employee-sidebar h2 {
+            text-align: center;
+            border-bottom: 2px solid #52ab98;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .employee-sidebar .nav-links {
+            list-style: none;
+            padding: 0;
+        }
+        .employee-sidebar .nav-links a {
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .employee-sidebar .nav-links a:hover {
+            background-color: #52ab98;
+        }
+
+        /* --- Dashboard Main Area (Unchanged) --- */
+        .dashboard-main-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            /* CRITICAL: Ensure main content takes up remaining width and doesn't push wrapper */
+            min-width: 0;
+        }
+
+        /* --- FLASH MESSAGE STYLES (Unchanged) --- */
+        .flash-message-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            width: auto;
+            max-width: 95%;
+            text-align: center;
+        }
+        .flash-message {
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            opacity: 1;
+        }
+        .flash-message.success {
+            background-color: #28a745;
+            color: white;
+        }
+        .flash-message.danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* --- RESPONSIVENESS FIXES (MOBILE) --- */
+        @media (max-width: 768px) {
+
+            /* Header is already good, but we keep the column stack */
+            .header-content {
+                flex-direction: column;
+                padding: 0; /* Remove padding here, controlled by parent .employee-header */
+            }
+            .header-content .employee-info {
+                text-align: center;
+                margin-top: 5px;
+                font-size: 0.9em;
+            }
+            .header-content .portal-title {
+                font-size: 1.3rem;
+            }
+
+            /* Main content wrapper stacking */
+            .main-content-wrapper {
+                flex-direction: column;
+                margin: 10px auto;
+                padding: 0 10px;
+                gap: 10px;
+            }
+
+            .employee-sidebar {
+                width: 100%;
+                min-width: 100%;
+                padding: 15px 10px;
+                order: -1;
+            }
+
+            .employee-sidebar h2 {
+                margin-bottom: 10px;
+            }
+
+            .employee-sidebar .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+            .employee-sidebar .nav-links li {
+                flex: 1 1 auto;
+                min-width: 120px;
+            }
+
+            .employee-sidebar .nav-links a {
+                text-align: center;
+                padding: 10px 5px;
+                font-size: 0.9em;
+                margin-bottom: 0;
+            }
+
+            .dashboard-main-area {
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+    <header class="employee-header">
+        <div class="header-content">
+            <div class="portal-title">Employee Portal</div>
+            {# Display Employee Name if available, using 'employee' which is passed from the view function #}
+            {% if employee %}
+                <span class="employee-info">
+                    Hello, **{{ employee['name'] }}** |
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                </span>
+            {% endif %}
+        </div>
+    </header>
+
+    {# FLASH MESSAGE RENDERING #}
+    <div class="flash-message-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    {# END FLASH MESSAGE RENDERING #}
+
+    <div class="main-content-wrapper">
+
+        <div class="employee-sidebar">
+            <h2>Employee Panel</h2>
+            <ul class="nav-links">
+                {% set current_emp_id = session.get('emp_id') %}
+
+                {% if current_emp_id %}
+                    <li>
+                        <a href="{{ url_for('employee_dashboard', emp_id=current_emp_id) }}">🏠 Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('employee_view_roster', emp_id=current_emp_id) }}">🗓️ View Roster</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('employee_make_request', emp_id=current_emp_id) }}">📝 Make Request</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('employee_profile', emp_id=current_emp_id) }}">👤 My Profile</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('employee_history', emp_id=current_emp_id) }}">⏱️ History (7 Days)</a>
+                    </li>
+                {% endif %}
+                <li>
+                    <a href="{{ url_for('logout') }}" class="logout-link">🚪 Logout</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="dashboard-main-area">
+            {% block content %}
+            {# Content will be injected here #}
+            {% endblock %}
+        </div>
+    </div>
+
+    {# JAVASCRIPT TIMER #}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const messages = document.querySelectorAll('.flash-message');
+            messages.forEach(message => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transition = 'opacity 0.5s ease-out';
+                    setTimeout(() => message.remove(), 500);
+                }, 3000);
+            });
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

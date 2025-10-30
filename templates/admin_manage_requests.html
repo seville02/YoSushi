@@ -1,0 +1,245 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin | Manage Employee Requests{% endblock %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* --- NEW COLOR SCHEME FOR REQUESTS --- */
+        :root {
+            /* General Theme Colors (Based on your screenshots) */
+            --dark-bg: #222831;          /* Main application background */
+            --header-bg: #393E46;        /* Used for borders/lines */
+            --card-bg: #2D333A;          /* Table/Container background */
+            --text-color: #EEEEEE;       /* Light Gray/White text */
+            --text-muted: #A0A0A0;       /* Muted text for notes */
+
+            /* Request Page Specific Colors (Purple Accent) */
+            --request-primary: #9C27B0;  /* Light Purple for emphasis/headers */
+            --request-light: #CF9BD8;    /* Lighter Purple for buttons/accents */
+            --status-accepted: #4CAF50;  /* Green for Accepted */
+            --status-rejected: #F44336;  /* Red for Rejected */
+        }
+
+        .logs-container {
+            padding: 0 20px 40px;
+        }
+
+        /* The margin-top style has been REMOVED here and applied INLINE
+           on the <h2> tag below to push the heading DOWN.
+        */
+        .page-header-request {
+            color: var(--text-color);
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 5px solid var(--request-primary); /* Purple accent */
+        }
+
+        /* Back Button Style (Updated to match new theme) */
+        .back-btn {
+            display: inline-block;
+            /* margin-bottom: 20px; - Removed for flex container */
+            padding: 8px 15px;
+            background-color: var(--request-light);
+            color: var(--dark-bg);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            font-weight: bold;
+            border: none;
+        }
+
+        .back-btn:hover {
+            background-color: var(--request-primary);
+            color: var(--text-color);
+        }
+
+        /* Table Container and Styling */
+        .requests-table-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            /* Mobile consideration: Ensure table container scrolls horizontally if needed */
+            overflow-x: auto;
+        }
+
+        table {
+            min-width: 600px; /* Ensures a minimum size for readability on mobile */
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+            color: var(--text-color);
+        }
+
+        /* Mobile adjustment for table readability */
+        @media (max-width: 600px) {
+            table {
+                font-size: 0.8em;
+            }
+            table th, table td {
+                padding: 8px 10px;
+            }
+            .btn-sm {
+                padding: 4px 8px;
+                font-size: 0.8em;
+            }
+        }
+
+
+        table thead tr {
+            background-color: var(--request-primary); /* Purple Header */
+            color: var(--text-color);
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--header-bg); /* Darker border line */
+        }
+
+        table td:last-child {
+            width: 35%; /* Gives more space for details/actions */
+        }
+
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badge Styling (applied to the span inside the TD) */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .status-accepted .status-badge {
+            background-color: var(--status-accepted);
+            color: white;
+        }
+
+        .status-rejected .status-badge {
+            background-color: var(--status-rejected);
+            color: white;
+        }
+
+        /* Pending actions styling */
+        textarea {
+            background-color: var(--header-bg);
+            border: 1px solid var(--request-light);
+            color: var(--text-color);
+            padding: 5px;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .btn-success {
+            background-color: var(--status-accepted);
+            color: white;
+        }
+
+        .btn-error {
+            background-color: var(--status-rejected);
+            color: white;
+        }
+
+        .admin-note-text {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<h2 class="page-header-request" style="margin-top: 80px;">Manage Employee Requests</h2>
+
+<div class="logs-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="{{ url_for('admin_panel') }}" class="btn back-btn">
+            ⬅ Back to Admin Panel
+        </a>
+
+        <form method="POST" action="{{ url_for('admin_delete_all_requests') }}" onsubmit="return confirm('⚠️ CRITICAL WARNING: This will permanently delete ALL employee requests. Are you sure you want to proceed?');" style="margin: 0; padding: 0;">
+            <button type="submit" class="btn btn-sm" style="background-color: var(--status-rejected); color: white; margin-left: 15px; font-weight: bold;">
+                <i class="fas fa-trash-alt"></i> Delete All
+            </button>
+            <input type="hidden" name="confirm_delete" value="DELETE_ALL_REQUESTS">
+        </form>
+    </div>
+    {% if requests %}
+    <div class="requests-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">ID</th>
+                    <th style="width: 15%;">Employee</th>
+                    <th style="width: 10%;">Type</th>
+                    <th style="width: 15%;">Submitted</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 45%;">Details / Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr class="status-{{ req.status | lower }}">
+                    <td>{{ req.id }}</td>
+                    <td style="text-align: left;">
+                        <strong>{{ req.name }}</strong> (ID: {{ req.emp_id }})
+                    </td>
+                    <td>{{ req.request_type }}</td>
+                    <td>
+                        {{ req.date_submitted.split(' ')[0] }}<br>
+                        <small style="color: var(--text-muted);">{{ req.date_submitted.split(' ')[1] }}</small>
+                    </td>
+                    <td>
+                        <span class="status-badge">
+                            {{ req.status }}
+                        </span>
+                    </td>
+                    <td style="text-align: left;">
+                        <p style="font-size: 0.9em; margin: 0 0 10px 0;">
+                            {{ req.content }}
+                        </p>
+
+                        {% if req.status == 'Pending' %}
+                        <form method="POST" action="{{ url_for('process_request', request_id=req.id) }}" style="margin-top: 10px;">
+                            <textarea name="admin_response" placeholder="Admin notes (optional)" style="width: 100%; margin-bottom: 5px;"></textarea>
+
+                            <button type="submit" name="action" value="Accepted" class="btn btn-success btn-sm">✅ Accept</button>
+                            <button type="submit" name="action" value="Rejected" class="btn btn-error btn-sm">❌ Reject</button>
+                        </form>
+                        {% else %}
+                        <p class="admin-note-text">
+                            Admin Note: <em>{{ req.admin_response or 'N/A' }}</em>
+                        </p>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="requests-table-container" style="text-align: center; padding: 30px;">
+        <p>No employee requests currently pending review.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
